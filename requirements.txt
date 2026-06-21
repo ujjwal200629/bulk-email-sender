@@ -1,3 +1,5 @@
 streamlit
 schedule
 pandas
+python-dotenv
+openpyxl

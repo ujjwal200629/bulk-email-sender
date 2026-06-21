@@ -1,17 +1,30 @@
 import streamlit as st
 import pandas as pd
 import threading
+import os
 from datetime import datetime
-from scheduler import start_scheduler
+from dotenv import load_dotenv
+from scheduler import start_scheduler, get_scheduler_info, is_scheduler_running, stop_scheduler
 from email_sender import send_bulk_email
+
+# Load environment variables from .env file
+load_dotenv()
 
 st.set_page_config(page_title="Email Automation", page_icon="📧")
 
 # -----------------------------
-# Session State Init
+# Sidebar Scheduler Status Dashboard
 # -----------------------------
-if "scheduler_started" not in st.session_state:
-    st.session_state.scheduler_started = False
+info = get_scheduler_info()
+st.sidebar.title("⚙️ Control Panel")
+if info["running"]:
+    st.sidebar.success(f"🟢 Automation Active\n\n⏰ Time: {info['time']}\n\n👥 Recipients: {info['recipients']}")
+    if st.sidebar.button("⏹️ Stop Automation"):
+        stop_scheduler()
+        st.sidebar.success("✅ Automation stopped!")
+        st.rerun()
+else:
+    st.sidebar.info("🔴 Automation Inactive\n\nConfigure settings and start the daily scheduler.")
 
 # -----------------------------
 # Helper: Validate Time
@@ -29,8 +42,8 @@ def is_valid_time(time_str):
 st.title("📧 Automated Bulk Email Sender (FREE)")
 st.write("Manual time scheduling • CSV/Excel support • Gmail only")
 
-sender_email = st.text_input("📨 Your Gmail Address")
-app_password = st.text_input("🔐 Gmail App Password", type="password")
+sender_email = st.text_input("📨 Your Gmail Address", value=os.getenv("SENDER_EMAIL", ""))
+app_password = st.text_input("🔐 Gmail App Password", type="password", value=os.getenv("GMAIL_APP_PASSWORD", ""))
 
 uploaded_file = st.file_uploader(
     "📂 Upload email file (CSV or Excel)",
@@ -92,8 +105,6 @@ if st.button("🚀 Start Daily Automation"):
         st.error("Enter time in HH:MM format.")
     elif not is_valid_time(send_time_str):
         st.error("❌ Invalid time format. Use HH:MM (24-hour).")
-    elif st.session_state.scheduler_started:
-        st.warning("⏳ Scheduler already running.")
     else:
         recipients = get_recipients(uploaded_file)
 
@@ -111,8 +122,8 @@ if st.button("🚀 Start Daily Automation"):
         )
         scheduler_thread.start()
 
-        st.session_state.scheduler_started = True
         st.success(f"✅ Emails scheduled daily at {send_time_str}")
+        st.rerun()
 
 # -----------------------------
 # Footer

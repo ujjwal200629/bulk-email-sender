@@ -1,4 +1,27 @@
+# Virtual Environment
 .venv/
+venv/
+ENV/
+
+# Python Cache
 __pycache__/
-.env
 *.pyc
+*.pyo
+*.pyd
+
+# Environment Variables
+.env
+
+# IDE / Project settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Local Logs & Artifacts
+logs/
+*.log
+*.docx
